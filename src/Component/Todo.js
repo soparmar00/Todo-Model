@@ -1,18 +1,16 @@
 import React, { useState, useEffect}  from 'react'
 import { Button,  Modal, Form,} from 'react-bootstrap';
 import { useDispatch, useSelector} from "react-redux";
-import { addTodo } from '../Redux/action';
-import { Link } from "react-router-dom";
+import { addTodo, editTodo, setTask } from '../Redux/action';
 import cuid from 'cuid'
 
 const Todo = () => {
 
     const [show, setShow] = useState(false);
-    const [model, setModel] = useState("Submit")
-    const [tasks, setTasks] = useState({title: '', description: ''});
+    const [model, setModel] = useState("")
 
     const result = useSelector((state) => state.todos.todoData)
-    console.log(result)
+    const data = useSelector((state) => state.todos.tasks)
 
     const dispatch = useDispatch();
 
@@ -31,14 +29,26 @@ const Todo = () => {
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setTasks({ ...tasks, [name]: value });
-    }
+        dispatch(setTask({ ...data, [name]: value}));
+  }
+    
 
     const handleSubmit = (e) => {
         e.preventDefault()
-        console.log(tasks.title, tasks.description)
-        dispatch(addTodo({  tasks, id: cuid() }))
+        if(data.id){
+            dispatch(editTodo({...data}))
+        }
+        else{
+            dispatch(addTodo({ ...data, id: cuid() }))
+        }
         handleClose()
+    }
+
+    const handleEdit = (fields) => {
+        console.log(fields)
+        dispatch(setTask(fields))
+        setModel("Edit")
+        handleShow()
     }
 
     return (
@@ -56,11 +66,11 @@ const Todo = () => {
     <Form onSubmit={handleSubmit} >
     <Form.Group className="mb-3" controlId="exampleForm.ControlInput1">
     <Form.Label>Title</Form.Label>
-    <Form.Control type="text" name='title' placeholder="Enter Title" onChange={handleChange}/>
+    <Form.Control type="text" name='title' defaultValue={data.title} placeholder="Enter Title" onChange={handleChange}/>
     </Form.Group>
     <Form.Group className="mb-3" controlId="exampleForm.ControlTextarea1">
     <Form.Label>Description</Form.Label>
-    <Form.Control as="textarea" rows={3} name='description'onChange={handleChange}/>
+    <Form.Control as="textarea" rows={3} defaultValue={data.des} name='des'onChange={handleChange}/>
     </Form.Group>
     
     <center>
@@ -69,23 +79,21 @@ const Todo = () => {
     </center>
 
     </Form>
-
     </Modal.Body>
     </Modal>
     </div>
-      <br />
-        <div>
-        <h3>Todo List</h3>
-        <div>
-        {result.map((fields) => 
-        <div>
-        <Link to={`/`}>
-        <span onClick={handleShow}><h6>{fields.tasks.title}</h6></span>
-        </Link>
-        <br />
-        </div>
-        )}
+    <br />
+    <div>
+    <h3>Todo List</h3>
+    <br />
+    <div>
+    {result.map((fields) => 
+    <div>
+    <span onClick={() =>handleEdit(fields)}><h6>{fields.title}</h6></span>
+    <br />
     </div>
+    )}
+    </div> 
     </div>
     </div>
     )
