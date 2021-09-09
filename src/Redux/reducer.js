@@ -1,8 +1,11 @@
-import { ADD_TODO, EDIT_TODO, SET_TASK } from "./action"
+import { ADD_TODO, DELETE_TODO, EDIT_TODO, SET_TASK, COMPLETE_TODO } from "./action"
 
 const initialState = {
     todoData: [],
-    tasks: {title: '', des: ''},
+    tasks: {title: '', dis: ''},
+    create: localStorage.getItem('create'),
+    edit: localStorage.getItem('edit'),
+    complete: []
 }
 
  const todos = (state=initialState, action) => {
@@ -10,7 +13,6 @@ const initialState = {
     switch(action.type) {
 
         case ADD_TODO:
-            console.log('reducer', action)
             return{
                 ...state,
                 tasks: initialState.tasks,
@@ -24,7 +26,6 @@ const initialState = {
             }
 
         case EDIT_TODO:
-            console.log('up', action)
             return{
                ...state,
                 tasks: initialState.tasks,
@@ -32,9 +33,21 @@ const initialState = {
                     if (match.id === action.payload.id) {
                     return { ...match, ...action.payload };
                  }
-                return match;
-                }),
+            return match;
+            }),
             }
+
+        case DELETE_TODO:
+            return {
+                todoData: state.todoData.filter((data) => data.id !== action.payload),
+            }
+
+        case COMPLETE_TODO:
+            return {
+                ...state,
+                complete: [...state.complete, action.payload],
+            }
+
         default:
             return state;
     }
