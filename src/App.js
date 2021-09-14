@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import "./App.css";
-import Todo from "./Component/Todo";
+import Check from "./Component/Todo";
 
 
 function App() {
@@ -9,7 +9,7 @@ function App() {
     <div className="App">
      <Router>
       <Switch>
-      <Route path="/" exact component={Todo} />
+      <Route path="/" exact component={Check} />
       </Switch>
       </Router>
     </div>

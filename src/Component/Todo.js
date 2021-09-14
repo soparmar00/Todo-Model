@@ -1,20 +1,59 @@
 import React, { useState, useEffect}  from 'react'
 import { Button,  Modal, Form,} from 'react-bootstrap';
 import { useDispatch, useSelector} from "react-redux";
-import { addTodo, CompleteTodo, deleteTodo, editTodo, selectTodo, setTask } from '../Redux/action';
+import { addTodo, completeTodo, copy_todo, deleteTodo, editTodo, selectTodo, setTask, uncomplete } from '../Redux/action';
 import cuid from 'cuid'
+import './style.css'
 
-const Todos = () => {
+const Check = () => {
 
   const [show, setShow] = useState(false);
   const [model, setModel] = useState("Submit")
-  const [select, setSelect] = useState(false)
+  const [select, setSelect] = useState()
+  const [completeSel, setCompleteSel] = useState()
 
   const result = useSelector((state) => state.todos.todoData)
   const data = useSelector((state) => state.todos.tasks)
-  const com = useSelector((state) => state.todos.complete)
-
+  const sel = useSelector((state) => state.todos.select)
+  const complete = useSelector((state) => state.todos.complete)
+  const copyData = useSelector((state) => state.todos.copyData)
   const dispatch = useDispatch();
+
+  const created = JSON.parse(localStorage.getItem('Created At'))
+  const edited = JSON.parse(localStorage.getItem('Edited At'))
+  const completed = JSON.parse(localStorage.getItem('Completed At'))
+
+
+  useEffect(() => {
+      setSelect(
+        result.map((data) => {
+            return{
+                set : false,
+                title: data.title,
+                id: data.id
+            }
+        })
+    );
+  }, [result])
+
+  useEffect(() => {
+      setCompleteSel(
+        complete.map((data) => {
+            return{
+                set : false,
+                title: data.title,
+                id: data.id,
+                dis: data.dis,
+            }
+        })
+    );
+  }, [complete])
+
+  useEffect(() => {
+      dispatch(selectTodo(select))
+  }, [select])
+
+
 
   const handleClose = () => {
     setShow(false)
@@ -31,11 +70,9 @@ const Todos = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    console.log(e.target)
     dispatch(setTask({ ...data, [name]: value}));
   }
     
-
   const handleSubmit = (e) => {
     e.preventDefault()
     if(data.id){
@@ -48,31 +85,70 @@ const Todos = () => {
   }
 
   const handleEdit = (fields) => {
-    console.log(fields)
       dispatch(setTask(fields))
       setModel("Edit")
       handleShow()
     }
 
-
-  const handleDeleteTodo = (id) => {
-    console.log(id)
+const handleDelete = (sel) => {
+    let id = []
+    sel.map((del) => {
+        if(del.set) {
+            id.push(del.id)
+        }
+        return del
+    }) 
     dispatch(deleteTodo(id))
+} 
+
+const handleComplete = (sel) => {
+    let completeData = []
+    sel.map((del) => {
+        if(del.set) {
+            completeData.push(del.id)
+        }
+        return del
+    })  
+
+    const cData = result.filter(data => completeData.includes(data.id))
+    cData.map((data) => {data.complete = new Date().toLocaleString() + "" ; return data})
+    dispatch(completeTodo({comD: cData}))
+    handleDelete(sel)
+}
+
+  const handleCopy = (sel) => {
+    let copy = []
+    sel.map((del) => {
+        if(del.set) {
+            copy.push(del)
+        }
+        return del;
+    })  
+    dispatch(copy_todo(copy))
   }
 
-  const handleComplete = (fields) => {
-      console.log(fields)
-      dispatch(CompleteTodo(fields))
+  const handleUncomplete = (completeSel) => {
+    let returnId = []
+    completeSel.map((re) => {
+        if(re.set) {
+            returnId.push(re.id)
+          }
+        return re;
+    })
+    dispatch(uncomplete(returnId)) 
+    handleUncompleteRemove(completeSel) 
   }
 
-    // const handleSelect = (e,id) => {
-    //     console.log(select, id)
-    //     const {name, checked} = e.target
-    //     setSelect({...select, [name]: checked})
-    //     dispatch(selectTodo({select, id}))
-    // }
-
-
+  const handleUncompleteRemove = (completeSel) => {
+    let returnData = []
+    completeSel.map((re) => {
+        if(re.set) {
+            returnData.push(re)
+          }
+        return re
+    })
+    dispatch(uncomplete(returnData))  
+  }
 
   return (
     <div>
@@ -111,47 +187,131 @@ const Todos = () => {
 
           <br />
             <span>
-              <div style={{ textAlign:"left"}}>
-                <form>
+              <div style={{float: 'left', paddingLeft: 70}} >
+                
                   <h3>Todo List</h3>
                     <div> 
                       <br />
                         <ul style={{listStyle: "none"}}>
                           {result.map((fields) => 
-                            <div>
-                              <input type="checkbox" name='select' ></input>
-                                <span>
-                                  <li>
-                                    <span onClick={() =>handleEdit(fields)}><h6>{fields.title}</h6></span>
-                                    <Button variant="danger" onClick={() => handleDeleteTodo(fields.id)}>Delete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
-                                    <Button variant="success" onClick={() => handleComplete(fields)}>Compelte</Button>
-                                    <br />
-                                  </li>
-                                </span>
-                            </div>
-                            )}
+                            <div >
+                              <input type="checkbox" onChange={event => {
+                               let checked = event.target.checked;
+                                setSelect(
+                                  select.map(data => {
+                                    if (fields.id === data.id) {
+                                        data.set = checked;
+                                      }
+                                    return data;
+                                  })
+                                );
+                          }}></input>       
+                          <div class="dropdown">
+                            <li>
+                              <span  onClick={() =>handleEdit(fields)}><h6>{fields.title}</h6></span>
+                            </li>
+                              <div class="dropdown-content">
+                                {created.map((his) => {
+                                  if(fields.id === his.id){
+                                    return <p>Created At : {his.create}</p>;
+                                    }
+                                    return ''
+                                  }  
+                                )}
+
+                                {edited ? edited.map((his) => {
+                                  if(fields.id === his.id){
+                                    return <p>Edited At : {his.edit}</p>;
+                                    }
+                                    return ''
+                                  }  
+                                ) : ''}
+                              </div>
+                          </div>
+                          </div>
+                          )}
                         </ul>
-                        <br />
+                      <br />
                     </div>
-                  </form>    
+                      
                   <br />
+                  <Button variant="danger" onClick={() => handleDelete(sel)}>Delete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
+                  <Button variant="success" onClick={() => handleComplete(sel)}>Complete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
+                  <Button variant="warning" onClick={() => handleCopy(sel)}>Copy</Button>
               </div>
-              <div style={{ textAlign:"left"}}>
-                {com ? 
+
+            <div style={{float: 'right', paddingRight: 200}} >
+              <h3>Compelte Todo</h3>
+               <br />
+                <ul style={{listStyle: "none"}}>                    
+                  {complete.map((fields) =>
                   <div>
-                    <h3>Compelte Todo</h3>
-                      {com.map((fields) => 
-                      <h6>{fields.title}</h6>
+                    <input type="checkbox" onChange={event => {
+                      let checked = event.target.checked;
+                      setCompleteSel(
+                        completeSel.map(data => {
+                          if (fields.id === data.id) {
+                          data.set = checked;
+                          }
+                          return data;
+                        })
+                     );
+                  }}>
+                </input>
+                  <div class="dropdown">
+                    <span>
+                      <li>
+                        <h6>{fields.title}</h6>
+                      </li>
+                    </span>
+                    <div class="dropdown-content">
+                      {created.map((his) => {
+                        if(fields.id === his.id) {
+                          return <p>Created At : {his.create}</p>;
+                        }
+                        return ''
+                        }  
                       )}
+                      
+                      {edited ? edited.map((his) => {
+                          if(fields.id === his.id) {
+                              return <p>Edited At : {his.edit}</p>;
+                          }
+                          return ''
+                        }  
+                      ): ''}
+    
+                      {completed.map((his) => {
+                          if(fields.id === his.id) {
+                              return <p>Created At : {his.complete}</p>;
+                          }
+                          return ''
+                        }  
+                      )}
+    
+                    </div>
                   </div>
-                  : '' }
-    
-              </div>
-            </span>
-    
+                  </div>
+   
+                  )}   
+                </ul>
+                  <Button variant="secondary" onClick={() => handleUncomplete(completeSel)}>Uncomplete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
+            </div>
+            <div style={{float: 'right', paddingRight: 150}} >
+              <h3>Copy Todos</h3>
+                <br />
+                  <ul style={{listStyle: "none"}}>  
+                    {copyData ? copyData.map((fields) =>       
+                      <li>
+                        <h6>Copy of "{fields.title}"</h6>
+                      </li>) : ''
+                    }
+                  </ul>
+            </div>
+        </span>
     </div>
     )
 }
 
 
-export default Todos
+export default Check;
