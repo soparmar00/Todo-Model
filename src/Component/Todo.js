@@ -1,7 +1,7 @@
 import React, { useState, useEffect}  from 'react'
 import { Button,  Modal, Form,} from 'react-bootstrap';
 import { useDispatch, useSelector} from "react-redux";
-import { addTodo, completeTodo, copy_todo, deleteTodo, editTodo, selectTodo, setTask, uncomplete } from '../Redux/action';
+import { addTodo, completeTodo, copy_todo, deleteTodo, editTodo, removeUn, selectTodo, setTask, uncomplete } from '../Redux/action';
 import cuid from 'cuid'
 import './style.css'
 
@@ -17,6 +17,7 @@ const Check = () => {
   const sel = useSelector((state) => state.todos.select)
   const complete = useSelector((state) => state.todos.complete)
   const copyData = useSelector((state) => state.todos.copyData)
+
   const dispatch = useDispatch();
 
   const created = JSON.parse(localStorage.getItem('Created At'))
@@ -128,26 +129,26 @@ const handleComplete = (sel) => {
   }
 
   const handleUncomplete = (completeSel) => {
-    let returnId = []
-    completeSel.map((re) => {
-        if(re.set) {
-            returnId.push(re.id)
-          }
-        return re;
-    })
-    dispatch(uncomplete(returnId)) 
-    handleUncompleteRemove(completeSel) 
-  }
-
-  const handleUncompleteRemove = (completeSel) => {
     let returnData = []
     completeSel.map((re) => {
         if(re.set) {
             returnData.push(re)
-          }
+        }
         return re
     })
-    dispatch(uncomplete(returnData))  
+    dispatch(uncomplete(returnData)) 
+    handleUncompleteRemove(completeSel) 
+  }
+
+  const handleUncompleteRemove = (completeSel) => {
+    let returnId = []
+    completeSel.map((re) => {
+        if(re.set) {
+            returnId.push(re.id)
+        }
+        return re
+    })
+    dispatch(removeUn(returnId))  
   }
 
   return (
@@ -297,7 +298,7 @@ const handleComplete = (sel) => {
                 </ul>
                   <Button variant="secondary" onClick={() => handleUncomplete(completeSel)}>Uncomplete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
             </div>
-            <div style={{float: 'right', paddingRight: 150}} >
+            <div style={{float: 'right', paddingRight: 300}} >
               <h3>Copy Todos</h3>
                 <br />
                   <ul style={{listStyle: "none"}}>  

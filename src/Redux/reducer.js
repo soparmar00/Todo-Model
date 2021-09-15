@@ -64,7 +64,7 @@ const initialState = {
         case UNCOMPLETED:
             return {
                 ...state,
-                todoData: action.payload,
+                todoData: [...state.todoData, ...action.payload]
             }
 
         case REMOVE_UNC: 
