@@ -16,7 +16,6 @@ const Check = () => {
   const data = useSelector((state) => state.todos.tasks)
   const sel = useSelector((state) => state.todos.select)
   const complete = useSelector((state) => state.todos.complete)
-  const copyData = useSelector((state) => state.todos.copyData)
 
   const dispatch = useDispatch();
 
@@ -24,14 +23,14 @@ const Check = () => {
   const edited = JSON.parse(localStorage.getItem('Edited At'))
   const completed = JSON.parse(localStorage.getItem('Completed At'))
 
-
   useEffect(() => {
       setSelect(
         result.map((data) => {
             return{
                 set : false,
                 title: data.title,
-                id: data.id
+                id: data.id,
+                dis: data.dis
             }
         })
     );
@@ -45,6 +44,7 @@ const Check = () => {
                 title: data.title,
                 id: data.id,
                 dis: data.dis,
+                create : data.create,
             }
         })
     );
@@ -53,8 +53,6 @@ const Check = () => {
   useEffect(() => {
       dispatch(selectTodo(select))
   }, [select])
-
-
 
   const handleClose = () => {
     setShow(false)
@@ -121,7 +119,10 @@ const handleComplete = (sel) => {
     let copy = []
     sel.map((del) => {
         if(del.set) {
-            copy.push(del)
+          del.title = `Copy of '${del.title}'`
+          del.id = cuid()
+          del.create = new Date().toLocaleString() + ""
+          copy.push(del)
         }
         return del;
     })  
@@ -284,7 +285,7 @@ const handleComplete = (sel) => {
     
                       {completed.map((his) => {
                           if(fields.id === his.id) {
-                              return <p>Created At : {his.complete}</p>;
+                              return <p>Completed At : {his.complete}</p>;
                           }
                           return ''
                         }  
@@ -297,17 +298,6 @@ const handleComplete = (sel) => {
                   )}   
                 </ul>
                   <Button variant="secondary" onClick={() => handleUncomplete(completeSel)}>Uncomplete</Button>&nbsp;&nbsp;&nbsp;&nbsp;
-            </div>
-            <div style={{float: 'right', paddingRight: 300}} >
-              <h3>Copy Todos</h3>
-                <br />
-                  <ul style={{listStyle: "none"}}>  
-                    {copyData ? copyData.map((fields) =>       
-                      <li>
-                        <h6>Copy of "{fields.title}"</h6>
-                      </li>) : ''
-                    }
-                  </ul>
             </div>
         </span>
     </div>

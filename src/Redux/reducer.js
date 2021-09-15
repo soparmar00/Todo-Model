@@ -5,11 +5,10 @@ const initialState = {
     tasks: {title: '', dis: ''},
     complete: [],
     select: {},
-    copyData: []
 }
 
  const todos = (state=initialState, action) => {
-
+ 
     switch(action.type) {
 
         case ADD_TODO:
@@ -58,7 +57,7 @@ const initialState = {
         case COPY_TODO: 
             return {
                 ...state,
-                copyData:  action.payload,
+                todoData: [...state.todoData, ...action.payload]
             }
 
         case UNCOMPLETED:
