@@ -1,7 +1,7 @@
 import React, { useState, useEffect}  from 'react'
 import { Button,  Modal, Form,} from 'react-bootstrap';
 import { useDispatch, useSelector} from "react-redux";
-import { addTodo, completeTodo, copy_todo, deleteTodo, editTodo, removeUn, selectTodo, setTask, uncomplete } from '../Redux/action';
+import { addTodo, completeTodo, complete_Date, copy_todo, deleteTodo, editTodo, removeUn, selectTodo, setTask, uncomplete} from '../Redux/action';
 import cuid from 'cuid'
 import './style.css'
 
@@ -16,12 +16,12 @@ const Check = () => {
   const data = useSelector((state) => state.todos.tasks)
   const sel = useSelector((state) => state.todos.select)
   const complete = useSelector((state) => state.todos.complete)
+  const date = useSelector((state) => state.todos.date)
 
   const dispatch = useDispatch();
 
-  const created = JSON.parse(localStorage.getItem('Created At'))
   const edited = JSON.parse(localStorage.getItem('Edited At'))
-  const completed = JSON.parse(localStorage.getItem('Completed At'))
+
 
   useEffect(() => {
       setSelect(
@@ -30,7 +30,8 @@ const Check = () => {
                 set : false,
                 title: data.title,
                 id: data.id,
-                dis: data.dis
+                dis: data.dis,
+                create: data.create
             }
         })
     );
@@ -44,7 +45,7 @@ const Check = () => {
                 title: data.title,
                 id: data.id,
                 dis: data.dis,
-                create : data.create,
+                create: data.create
             }
         })
     );
@@ -53,6 +54,8 @@ const Check = () => {
   useEffect(() => {
       dispatch(selectTodo(select))
   }, [select])
+
+
 
   const handleClose = () => {
     setShow(false)
@@ -104,14 +107,13 @@ const handleComplete = (sel) => {
     let completeData = []
     sel.map((del) => {
         if(del.set) {
-            completeData.push(del.id)
+            completeData.push(del)
         }
         return del
     })  
-
-    const cData = result.filter(data => completeData.includes(data.id))
-    cData.map((data) => {data.complete = new Date().toLocaleString() + "" ; return data})
-    dispatch(completeTodo({comD: cData}))
+    dispatch(completeTodo({comD: completeData}))
+    let date = new Date().toLocaleString() + ""
+    completeData.map((data) => dispatch(complete_Date({ 'id': data.id, 'complete': date})))
     handleDelete(sel)
 }
 
@@ -138,6 +140,8 @@ const handleComplete = (sel) => {
         return re
     })
     dispatch(uncomplete(returnData)) 
+    let date = new Date().toLocaleString() + ""
+    returnData.map((data) => dispatch(complete_Date({ 'id': data.id, 'complete': date})))
     handleUncompleteRemove(completeSel) 
   }
 
@@ -213,7 +217,7 @@ const handleComplete = (sel) => {
                               <span  onClick={() =>handleEdit(fields)}><h6>{fields.title}</h6></span>
                             </li>
                               <div class="dropdown-content">
-                                {created.map((his) => {
+                                {result.map((his) => {
                                   if(fields.id === his.id){
                                     return <p>Created At : {his.create}</p>;
                                     }
@@ -267,30 +271,15 @@ const handleComplete = (sel) => {
                       </li>
                     </span>
                     <div class="dropdown-content">
-                      {created.map((his) => {
-                        if(fields.id === his.id) {
-                          return <p>Created At : {his.create}</p>;
-                        }
-                        return ''
+    
+                      {date.map((his) => {
+                          if(fields.id === his.id) {
+                              return <p>{his.complete}</p>;
+                          }
+                          return ''
                         }  
                       )}
                       
-                      {edited ? edited.map((his) => {
-                          if(fields.id === his.id) {
-                              return <p>Edited At : {his.edit}</p>;
-                          }
-                          return ''
-                        }  
-                      ): ''}
-    
-                      {completed.map((his) => {
-                          if(fields.id === his.id) {
-                              return <p>Completed At : {his.complete}</p>;
-                          }
-                          return ''
-                        }  
-                      )}
-    
                     </div>
                   </div>
                   </div>
